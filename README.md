@@ -1,5 +1,6 @@
 This is a blog forum project with login/signup features, posting questions, answer modifications, upvote/downvote features in answer and questions (requires auth or admin)
 
+
 Features:
 
 -User friendly UI
@@ -19,6 +20,7 @@ Features:
  -Only the blog post owner can approve answers
  
 -Pagination
+
 
 This project uses:
 
