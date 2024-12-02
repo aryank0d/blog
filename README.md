@@ -1,5 +1,12 @@
 This is a blog forum project with login/signup features, posting questions, answer modifications, upvote/downvote features in answer and questions (requires auth or admin)
 
+Procedure:
+To run this project you need to configure MongoDB compass at localhost:27017
+
+run npm run dev in terminal for blog_frontend run npm start in terminal for blog_backend
+
+dont forget to install node modules before that
+
 
 Features:
 
@@ -29,11 +36,3 @@ This project uses:
 -NodeJS,ExpressJS as backend
 
 -MongoDB as database
-
-
-Procedure:
-To run this project you need to configure MongoDB compass at localhost:27017
-
-run npm run dev in terminal for blog_frontend run npm start in terminal for blog_backend
-
-dont forget to install node modules before that
