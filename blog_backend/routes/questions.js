@@ -136,16 +136,31 @@ router.get('/questions/:id', async (req, res) => {
             return res.status(404).json({ message: 'Question not found' });
         }
 
-        console.log('Sending question data:', {
-            questionId: question._id,
-            authorId: question.user_id._id,
-            answers: question.answers.map(a => ({
-                id: a._id,
-                authorId: a.user_id._id
-            }))
-        });
+        const formattedAnswers = await Promise.all(question.answers.map(async (answer) => {
+            const upvoteCount = answer.upvotes?.length || 0;
+            const downvoteCount = answer.downvotes?.length || 0;
+            const voteCount = upvoteCount - downvoteCount;
 
-        res.json(question);
+            let userVoteStatus = 'none';
+            if (req.user) {
+                if (answer.upvotes.includes(req.user.id)) {
+                    userVoteStatus = 'up';
+                } else if (answer.downvotes.includes(req.user.id)) {
+                    userVoteStatus = 'down';
+                }
+            }
+
+            return {
+                ...answer.toObject(),
+                voteCount,
+                userVoteStatus
+            };
+        }));
+
+        const questionObj = question.toObject();
+        questionObj.answers = formattedAnswers;
+
+        res.json(questionObj);
     } catch (err) {
         console.error('Error fetching question:', err);
         res.status(500).json({ message: 'Error fetching question details' });
