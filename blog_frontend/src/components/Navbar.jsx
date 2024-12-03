@@ -68,7 +68,7 @@ const Navbar = ({ isAuthenticated, onLogout }) => {
               type="text"
               value={searchTerm}
               onChange={handleInputChange}
-              placeholder="Search questions or use # for tags..."
+              placeholder="Search questions or tags..."
               className="search-input"
             />
 
