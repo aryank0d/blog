@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import '../styles/navbar.css';
 
@@ -8,29 +8,45 @@ const Navbar = ({ isAuthenticated, onLogout }) => {
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
 
   const commonTags = ['javascript', 'react', 'node.js', 'python', 'java', 'css'];
 
   useEffect(() => {
-    if (location.pathname === '/dashboard' || location.pathname === '/') {
-      const timer = setTimeout(() => {
-        if (searchTerm.trim()) {
-          const isTagSearch = searchTerm.startsWith('#');
-          const searchQuery = isTagSearch ? searchTerm.substring(1) : searchTerm;
-          navigate(`/dashboard?${isTagSearch ? 'tag' : 'search'}=${encodeURIComponent(searchQuery)}`);
-        } else {
-          navigate('/dashboard');
-        }
-      }, 300);
-
-      return () => clearTimeout(timer);
+    const searchQuery = searchParams.get('search') || '';
+    const tagQuery = searchParams.get('tag') || '';
+    if (searchQuery) {
+      setSearchTerm(searchQuery);
+    } else if (tagQuery) {
+      setSearchTerm(`#${tagQuery}`);
+    } else {
+      setSearchTerm('');
     }
-  }, [searchTerm, navigate, location.pathname]);
+  }, [searchParams]);
+
+  const handleSearch = (value) => {
+    if (value.trim()) {
+      const isTagSearch = value.startsWith('#');
+      const searchQuery = isTagSearch ? value.substring(1) : value;
+      
+      const params = new URLSearchParams();
+      params.set(isTagSearch ? 'tag' : 'search', searchQuery);
+      params.set('page', '1');
+      
+      navigate(`/dashboard?${params.toString()}`);
+    } else {
+      navigate('/dashboard?page=1');
+    }
+  };
 
   const handleInputChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
     setShowTagSuggestions(value.startsWith('#'));
+    const timeoutId = setTimeout(() => {
+      handleSearch(value);
+    }, 300);
+    return () => clearTimeout(timeoutId);
   };
 
   const handleTagClick = (tag) => {
