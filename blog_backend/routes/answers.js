@@ -123,8 +123,6 @@ router.post('/:id/vote', authMiddleware, async (req, res) => {
         const { voteType } = req.body;
         const userId = req.user.id;
 
-        console.log('Vote request received:', { answerId: id, userId, voteType });
-
         const answer = await Answer.findById(id);
         if (!answer) {
             return res.status(404).json({ message: 'Answer not found' });
@@ -133,49 +131,34 @@ router.post('/:id/vote', authMiddleware, async (req, res) => {
         if (!answer.upvotes) answer.upvotes = [];
         if (!answer.downvotes) answer.downvotes = [];
 
-        const upvoteStrings = answer.upvotes.map(id => id.toString());
-        const downvoteStrings = answer.downvotes.map(id => id.toString());
+        const hasUpvoted = answer.upvotes.some(id => id.toString() === userId);
+        const hasDownvoted = answer.downvotes.some(id => id.toString() === userId);
 
         answer.upvotes = answer.upvotes.filter(id => id.toString() !== userId);
         answer.downvotes = answer.downvotes.filter(id => id.toString() !== userId);
 
-        let userVoteStatus = 'none';
+        let newVoteStatus = 'none';
 
-        if (voteType === 'up') {
-            if (!upvoteStrings.includes(userId)) {
-                answer.upvotes.push(userId);
-                userVoteStatus = 'up';
-            }
-        } else if (voteType === 'down') {
-            if (!downvoteStrings.includes(userId)) {
-                answer.downvotes.push(userId);
-                userVoteStatus = 'down';
-            }
+        if (voteType === 'up' && !hasUpvoted) {
+            answer.upvotes.push(userId);
+            newVoteStatus = 'up';
+        } else if (voteType === 'down' && !hasDownvoted) {
+            answer.downvotes.push(userId);
+            newVoteStatus = 'down';
         }
 
         await answer.save();
 
         const voteCount = answer.upvotes.length - answer.downvotes.length;
 
-        console.log('Vote processed:', { 
-            answerId: id, 
-            voteCount, 
-            userVoteStatus,
-            upvotes: answer.upvotes.length,
-            downvotes: answer.downvotes.length
-        });
-
         res.json({ 
             success: true, 
             voteCount,
-            userVoteStatus
+            userVoteStatus: newVoteStatus
         });
     } catch (err) {
         console.error('Error processing vote:', err);
-        res.status(500).json({ 
-            message: 'Error processing vote',
-            error: err.message 
-        });
+        res.status(500).json({ message: 'Error processing vote' });
     }
 });
 
