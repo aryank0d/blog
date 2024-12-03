@@ -30,11 +30,16 @@ const Dashboard = () => {
                 setLoading(true);
                 const searchQuery = searchParams.get('search') || '';
                 const tagQuery = searchParams.get('tag') || '';
+                const pageQuery = searchParams.get('page') || '1';
+                
+                setSearchTerm(searchQuery);
+                setTagFilter(tagQuery);
+                setCurrentPage(Number(pageQuery));
                 
                 const [questionsResponse, userResponse] = await Promise.all([
                     API.get('/questions/questions', {
                         params: {
-                            page: currentPage,
+                            page: pageQuery,
                             limit: questionsPerPage,
                             search: searchQuery,
                             tag: tagQuery
@@ -64,7 +69,7 @@ const Dashboard = () => {
         };
 
         fetchData();
-    }, [currentPage, questionsPerPage, searchParams]);
+    }, [searchParams]);
 
     const handleAskQuestionClick = () => {
         if (!currentUser) {
@@ -122,11 +127,15 @@ const Dashboard = () => {
     };
 
     const handlePageChange = (pageNumber) => {
-        setCurrentPage(pageNumber);
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
+        const searchQuery = searchParams.get('search') || '';
+        const tagQuery = searchParams.get('tag') || '';
+        
+        const params = new URLSearchParams();
+        if (searchQuery) params.set('search', searchQuery);
+        if (tagQuery) params.set('tag', tagQuery);
+        params.set('page', pageNumber.toString());
+        
+        navigate(`/dashboard?${params.toString()}`);
     };
 
     const handleSearch = (term) => {
@@ -238,9 +247,9 @@ const Dashboard = () => {
             {Array.isArray(questions) && totalQuestions > questionsPerPage && (
                 <div className="pagination">
                     <Pagination
-                        currentPage={currentPage}
+                        currentPage={parseInt(searchParams.get('page') || '1')}
                         totalPages={Math.ceil(totalQuestions / questionsPerPage)}
-                        onPageChange={setCurrentPage}
+                        onPageChange={handlePageChange}
                     />
                 </div>
             )}
