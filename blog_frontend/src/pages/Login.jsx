@@ -4,7 +4,7 @@ import API from '../Api';
 import { setAuthToken } from '../Api';
 import '../styles/auth.css';
 
-const Login = () => {
+const Login = ({ onLogin }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -19,7 +19,7 @@ const Login = () => {
         try {
             const response = await API.post('/auth/login', { email, password });
             if (response.data.token) {
-                setAuthToken(response.data.token);
+                onLogin(response.data.token);
                 navigate('/dashboard');
             }
         } catch (err) {
