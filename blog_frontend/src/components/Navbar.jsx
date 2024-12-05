@@ -1,16 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import PropTypes from 'prop-types';
+import API from '../Api';
 import '../styles/navbar.css';
 
 const Navbar = ({ isAuthenticated, onLogout }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [showTagSuggestions, setShowTagSuggestions] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
-  const location = useLocation();
   const [searchParams] = useSearchParams();
-
-  const commonTags = ['javascript', 'react', 'node.js', 'python', 'java', 'css'];
 
   useEffect(() => {
     const searchQuery = searchParams.get('search') || '';
@@ -20,38 +18,53 @@ const Navbar = ({ isAuthenticated, onLogout }) => {
     } else if (tagQuery) {
       setSearchTerm(`#${tagQuery}`);
     } else {
-      setSearchTerm('');
+      setSearchTerm('');  
     }
   }, [searchParams]);
 
-  const handleSearch = (value) => {
-    if (value.trim()) {
-      const isTagSearch = value.startsWith('#');
-      const searchQuery = isTagSearch ? value.substring(1) : value;
-      
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      if (isAuthenticated) {
+        try {
+          const response = await API.get('/auth/current-user');
+          setCurrentUser(response.data);
+        } catch (error) {
+          console.error('Error fetching user:', error);
+        }
+      } else {
+        setCurrentUser(null);
+      }
+    };
+
+    fetchCurrentUser();
+  }, [isAuthenticated]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+
+    if (!searchTerm || searchTerm.trim() === '' || searchTerm === '#') {
+      navigate('/dashboard');
+      return;
+    }
+
+    const isTagSearch = searchTerm.startsWith('#');
+    const searchQuery = isTagSearch ? searchTerm.substring(1) : searchTerm;
+    
+    if (searchQuery.trim()) {
       const params = new URLSearchParams();
-      params.set(isTagSearch ? 'tag' : 'search', searchQuery);
+      params.set(isTagSearch ? 'tag' : 'search', searchQuery.trim());
       params.set('page', '1');
-      
       navigate(`/dashboard?${params.toString()}`);
-    } else {
-      navigate('/dashboard?page=1');
     }
   };
 
   const handleInputChange = (e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    setShowTagSuggestions(value.startsWith('#'));
-    const timeoutId = setTimeout(() => {
-      handleSearch(value);
-    }, 300);
-    return () => clearTimeout(timeoutId);
-  };
-
-  const handleTagClick = (tag) => {
-    setSearchTerm(`#${tag}`);
-    setShowTagSuggestions(false);
+    const newValue = e.target.value;
+    setSearchTerm(newValue);
+    
+    if (!newValue || newValue.trim() === '') {
+      navigate('/dashboard');
+    }
   };
 
   return (
@@ -63,36 +76,38 @@ const Navbar = ({ isAuthenticated, onLogout }) => {
             Forum
           </Link>
 
-          <div className="search-container">
+          <form onSubmit={handleSearch} className="search-container">
             <input
               type="text"
               value={searchTerm}
               onChange={handleInputChange}
-              placeholder="Search questions or tags..."
+              placeholder="Search questions or use # for tags..."
               className="search-input"
             />
-
-            {showTagSuggestions && (
-              <div className="tag-suggestions">
-                {commonTags
-                  .filter(tag => tag.includes(searchTerm.substring(1).toLowerCase()))
-                  .map((tag) => (
-                    <button
-                      key={tag}
-                      onClick={() => handleTagClick(tag)}
-                      className="tag-suggestion-item"
-                    >
-                      #{tag}
-                    </button>
-                  ))}
-              </div>
-            )}
-          </div>
+            <button type="submit" className="search-button">
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor" 
+                className="search-icon"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
+                />
+              </svg>
+            </button>
+          </form>
 
           <div className="nav-links">
-            <Link to="/dashboard" className="nav-link">
-              Dashboard
-            </Link>
+            {currentUser && (
+              <span className="welcome-text">
+                Welcome, {currentUser.username}!
+              </span>
+            )}
             
             {isAuthenticated ? (
               <button onClick={onLogout} className="logout-button">
