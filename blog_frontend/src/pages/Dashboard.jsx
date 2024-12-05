@@ -176,11 +176,6 @@ const Dashboard = () => {
 
     return (
         <div className="dashboard-container">
-            {currentUser && (
-                <div className="welcome-message">
-                    <h2>Welcome, <span className="username">{currentUser.username}</span>!</h2>
-                </div>
-            )}
             <div className="dashboard-header">
                 <h1 className="dashboard-title">Questions</h1>
                 <button
