@@ -42,7 +42,10 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/login" element={<Login onLogin={handleLogin} />} />
+          <Route 
+            path="/login" 
+            element={<Login onLogin={handleLogin} />} 
+          />
           <Route path="/register" element={<Register />} />
           <Route path="/questions/:id" element={<QuestionDetails />} />
         </Routes>
